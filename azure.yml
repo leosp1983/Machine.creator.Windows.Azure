@@ -1,0 +1,59 @@
+---
+- hosts: localhost
+  gather_facts: no
+  environment:
+    http_proxy: http://youproxy:port
+    https_proxy: https://youproxy:port
+
+  tasks:
+
+  - debug:
+      msg: "{{ subscription | regex_replace('(([a-zA-Z].*))_')}}"
+    register: subscription_id
+
+  - shell: Select-AzSubscription -Subscription "{{subscription_id.msg}}"
+    args:
+      executable: /usr/bin/pwsh
+    vars:
+      ansible_connection: ssh
+      ansible_host: "{{host}}"
+      ansible_user: "{{user}}"
+      ansible_password: "{{pass}}"
+
+  - name: Create a network interface
+    include_role:
+      name: networkinterface
+
+  - name: Create VM
+    include_role:
+      name: virtualmachine
+
+  - name: Adicionado o {{hostname}} ao inventory
+    include_role:
+      name: inventory
+
+- hosts: windows
+  gather_facts: yes
+  vars:
+    ansible_connection: winrm
+    ansible_winrm_user: "{{localuser}}"
+    ansible_winrm_password: "{{lacalpass}}"
+    ansible_winrm_read_timeout_sec: 120
+    ansible_winrm_operation_timeout_sec: 60
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+
+  - name: Instalando Ferramentas do sistema
+    include_role:
+      name: tools
+
+  - name: Adicionando ao domínio
+    include_role:
+      name: orgunit
+
+  - win_reboot:
+      reboot_timeout: 3600
+
+  - win_timezone:
+      timezone: E. South America Standard Time

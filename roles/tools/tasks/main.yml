@@ -1,0 +1,52 @@
+- name: Habilitando o Telnet
+  win_feature:
+    name: Telnet-Client
+    state: present
+
+- name: Desabilitando o Firewall 
+  win_firewall:
+    state: disabled
+    profiles:
+      - Domain
+      - Private
+      - Public
+    tags: disable_firewall
+
+- name: Instalando o DHCP
+  win_feature:
+      name: DHCP
+      state: present
+      include_sub_features: yes
+      include_management_tools: yes
+  when: dhcp == "SIM"
+
+- name: Instalando o DNS
+  win_feature:
+      name: DNS
+      state: present
+      include_sub_features: yes
+      include_management_tools: yes
+  when: dns == "SIM"
+
+- name: Instalando o Print-Server
+  win_feature:
+      name: Print-Server
+      state: present
+      include_sub_features: yes
+      include_management_tools: yes
+  when: print == "SIM"
+
+- name: Instalando o NET-Framework-Core
+  win_feature:
+      name: NET-Framework-Core
+      source: C:\temp\sources\sxs
+      state: present
+  when: net == "SIM" or iis == "SIM"
+
+- name: Instalando o Web-Server
+  win_feature:
+      name: Web-Server
+      state: present
+      include_sub_features: yes
+      include_management_tools: yes
+  when: iis == "SIM"
